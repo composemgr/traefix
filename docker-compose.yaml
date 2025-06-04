@@ -1,0 +1,46 @@
+name: proxy
+services:
+  proxy:
+    image: proxy:latest
+    container_name: traefik
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    environment:
+      - BASE_HOST_NAME=${BASE_HOST_NAME:-$HOSTNAME}
+      - RFC2136_TSIG_KEY=${RFC2136_TSIG_KEY}
+      - RFC2136_NAMESERVER=${RFC2136_NAMESERVER}
+      - RFC2136_TSIG_SECRET=${RFC2136_TSIG_SECRET}
+      - RFC2136_TSIG_ALGORITHM=${RFC2136_TSIG_ALGORITHM}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - './rootfs/config/traefik/acme.json:/acme.json'
+      - './rootfs/config/traefik/config.yml:/config.yml:ro'
+      - './rootfs/config/traefik/traefik.yml:/traefik.yml:ro'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.entrypoints=http'
+      - 'traefik.http.routers.traefik.rule=Host(`traefik-dashboard.${BASE_HOST_NAME}`)'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=USER:BASIC_AUTH_PASSWORD'
+      - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https'
+      - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
+      - 'traefik.http.routers.traefik-secure.entrypoints=https'
+      - 'traefik.http.routers.traefik-secure.rule=Host(`traefik-dashboard.${BASE_HOST_NAME}`)'
+      - 'traefik.http.routers.traefik-secure.middlewares=traefik-auth'
+      - 'traefik.http.routers.traefik-secure.tls=true'
+      - 'traefik.http.routers.traefik-secure.tls.certresolver=rfc2136'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].main=${BASE_HOST_NAME}'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${BASE_HOST_NAME}'
+      - 'traefik.http.routers.traefik-secure.service=api@internal'
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: proxy
+    external: true
