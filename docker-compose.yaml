@@ -28,9 +28,9 @@ services:
     volumes:
       - '/etc/localtime:/etc/localtime:ro'
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-      - './rootfs/config/traefik/acme.json:/acme.json'
-      - './rootfs/config/traefik/config.yml:/config.yml:ro'
-      - './rootfs/config/traefik/traefik.yml:/traefik.yml:ro'
+      - './volumes/config/traefik/acme.json:/acme.json'
+      - './volumes/config/traefik/config.yml:/config.yml:ro'
+      - './volumes/config/traefik/traefik.yml:/traefik.yml:ro'
     networks:
       - proxy
 
