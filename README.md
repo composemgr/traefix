@@ -45,9 +45,9 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/traefik/acme.json` - Data storage
-- `./rootfs/config/traefik/config.yml` - Data storage
-- `./rootfs/config/traefik/traefik.yml` - Data storage
+- `./volumes/config/traefik/acme.json` - Data storage
+- `./volumes/config/traefik/config.yml` - Data storage
+- `./volumes/config/traefik/traefik.yml` - Data storage
 
 ## 🔍 Logging
 
