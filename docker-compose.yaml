@@ -22,6 +22,8 @@ services:
       RFC2136_NAMESERVER: ${RFC2136_NAMESERVER:-127.0.0.1}
       RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET:-changeme_tsig_secret}
       RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM:-hmac-sha256.}
+      CONTAINER_NAME: traefik
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '80:80'
       - '443:443'
@@ -31,10 +33,29 @@ services:
       - './volumes/config/traefik/acme.json:/acme.json'
       - './volumes/config/traefik/config.yml:/config.yml:ro'
       - './volumes/config/traefik/traefik.yml:/traefik.yml:ro'
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://traefik:443'
+      - 'cloudflare.hostname=traefix.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.traefik.entrypoints=http'
+      - 'traefik.http.routers.traefik-secure.tls=true'
+      - 'traefik.http.routers.traefik.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
+      - 'traefik.http.routers.traefik-secure.entrypoints=https'
+      - 'traefik.http.routers.traefik-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.traefik-secure.service=traefik'
+      - 'traefik.http.services.traefik.loadbalancer.server.port=443'
     networks:
       - proxy
+      - cloudflare
 
 networks:
   proxy:
     name: proxy
     external: false
+  cloudflare:
+    external: true
