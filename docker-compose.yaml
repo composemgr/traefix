@@ -9,7 +9,7 @@ x-logging: &default-logging
 
 services:
   proxy:
-    image: proxy:latest
+    image: traefik:latest
     container_name: traefik
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
@@ -18,10 +18,10 @@ services:
     environment:
       TZ: ${TZ:-America/New_York}
       BASE_HOST_NAME: ${BASE_HOST_NAME:-$HOSTNAME}
-      RFC2136_TSIG_KEY: ${RFC2136_TSIG_KEY}
-      RFC2136_NAMESERVER: ${RFC2136_NAMESERVER}
-      RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET}
-      RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM}
+      RFC2136_TSIG_KEY: ${RFC2136_TSIG_KEY:-changeme_tsig_key}
+      RFC2136_NAMESERVER: ${RFC2136_NAMESERVER:-127.0.0.1}
+      RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET:-changeme_tsig_secret}
+      RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM:-hmac-sha256.}
     ports:
       - '80:80'
       - '443:443'
