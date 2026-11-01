@@ -1,0 +1,49 @@
+name: traefix
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  proxy:
+    image: traefik:latest
+    container_name: traefik
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: traefik
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      RFC2136_TSIG_KEY: ${RFC2136_TSIG_KEY:-changeme_tsig_key}
+      RFC2136_NAMESERVER: ${RFC2136_NAMESERVER:-127.0.0.1}
+      RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET:-changeme_tsig_secret}
+      RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM:-hmac-sha256.}
+    volumes:
+      - './volumes/config/traefix/acme.json:/acme.json:z'
+      - './volumes/config/traefik/config.yml:/config.yml:ro'
+      - './volumes/config/traefik/traefik.yml:/traefik.yml:ro'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.traefik.entrypoints=http'
+      - 'traefik.http.routers.traefik.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
+      - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.traefik-secure.entrypoints=https'
+      - 'traefik.http.routers.traefik-secure.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.traefik-secure.service=traefik'
+      - 'traefik.http.services.traefik.loadbalancer.server.port=80'
+    networks:
+      - traefix-app
+      - traefik
+
+networks:
+  traefix-app:
+    name: traefix-app
+    external: false
+  traefik:
+    external: true

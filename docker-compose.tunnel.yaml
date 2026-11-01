@@ -1,0 +1,41 @@
+name: traefix
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  proxy:
+    image: traefik:latest
+    container_name: traefik
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: traefik
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      RFC2136_TSIG_KEY: ${RFC2136_TSIG_KEY:-changeme_tsig_key}
+      RFC2136_NAMESERVER: ${RFC2136_NAMESERVER:-127.0.0.1}
+      RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET:-changeme_tsig_secret}
+      RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM:-hmac-sha256.}
+    volumes:
+      - './volumes/config/traefix/acme.json:/acme.json:z'
+      - './volumes/config/traefik/config.yml:/config.yml:ro'
+      - './volumes/config/traefik/traefik.yml:/traefik.yml:ro'
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://traefik:80'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - traefix-app
+      - cloudflare
+
+networks:
+  traefix-app:
+    name: traefix-app
+    external: false
+  cloudflare:
+    external: true
