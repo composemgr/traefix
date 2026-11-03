@@ -21,6 +21,12 @@ services:
       RFC2136_NAMESERVER: ${RFC2136_NAMESERVER:-127.0.0.1}
       RFC2136_TSIG_SECRET: ${RFC2136_TSIG_SECRET:-changeme_tsig_secret}
       RFC2136_TSIG_ALGORITHM: ${RFC2136_TSIG_ALGORITHM:-hmac-sha256.}
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '80']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     volumes:
       - './volumes/config/traefix/acme.json:/acme.json:z'
       - './volumes/config/traefik/config.yml:/config.yml:ro'
